@@ -1,0 +1,61 @@
+/* index.css */
+
+/* Reset and base */
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: #D8C4B6; /* light beige background */
+  color: #213555; /* dark blue text */
+  min-height: 100vh;
+}
+
+/* Links */
+a {
+  font-weight: 500;
+  color: #3E5879; /* steel blue */
+  text-decoration: none;
+}
+a:hover {
+  color: #213555; /* dark blue */
+}
+
+/* Headings */
+h1 {
+  font-size: 2.5rem;
+  line-height: 1.2;
+  color: #213555;
+}
+
+/* Buttons */
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #213555;
+  color: #F5EFE7;
+  cursor: pointer;
+  transition: background-color 0.25s, color 0.25s;
+}
+button:hover {
+  background-color: #3E5879;
+  color: #ffffff;
+}
+button:focus,
+button:focus-visible {
+  outline: 3px solid #3E5879;
+}
+
+/* Utility container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}

@@ -1,0 +1,106 @@
+.db-container {
+    padding: 2rem;
+    background-color: #F5EFE7;
+    min-height: 100vh;
+  }
+  
+  .db-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .db-header h1 {
+    color: #213555;
+  }
+  
+  .history-btn {
+    background: #213555;
+    color: white;
+    border: none;
+    padding: 0.6em 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .db-list {
+    display: grid;
+    gap: 1rem;
+  }
+  
+  .db-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    border: 2px solid transparent;
+  }
+  
+  .db-card.selected {
+    border: 2px solid #3E5879;
+  }
+  
+  .db-card h2 {
+    margin: 0;
+    color: #213555;
+  }
+  
+  .db-actions {
+    margin-top: 1rem;
+    display: flex;
+    gap: 1rem;
+  }
+  
+  .db-actions button {
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  
+  .delete-btn {
+    background: #c0392b;
+    color: white;
+  }
+  
+  .add-btn {
+    margin-top: 1rem;
+    padding: 0.6rem 1.2rem;
+    background: #3E5879;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .db-footer {
+    margin-top: 2rem;
+    text-align: center;
+  }
+  
+  .continue-btn {
+    padding: 0.8rem 1.5rem;
+    background: #213555;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  
+  .continue-btn:disabled {
+    background: gray;
+    cursor: not-allowed;
+  }
+  
+  .empty-state {
+    text-align: center;
+    color: #213555;
+  }
+
+  .error-msg {
+    color: red;
+    margin-bottom: 1rem;
+    font-weight: bold;
+  }
+  
+  

@@ -1,0 +1,136 @@
+.query-container {
+    display: flex;
+    justify-content: center;
+    background-color: #E9E9E9; /* subtle background */
+    height: 100vh;
+    font-family: system-ui, sans-serif;
+  }
+  
+  .query-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 900px;
+    height: 100%;
+    background: #F5EFE7; /* chat background */
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  
+  /* Header */
+  .query-header {
+    padding: 1rem 1.5rem;
+    font-weight: bold;
+    background: #213555;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  
+  .query-header button {
+    background: #fff;
+    color: #213555;
+    border: none;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.2s;
+  }
+  
+  .query-header button:hover {
+    background: #ddd;
+  }
+  
+  /* Chat window */
+  .chat-window {
+    flex: 1;
+    padding: 1.5rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Bubbles */
+  .chat-bubble {
+    display: inline-block;
+    width: fit-content;
+    max-width: 70%;
+    padding: 0.9rem 1.2rem;
+    border-radius: 18px;
+    white-space: pre-line;
+    word-wrap: break-word;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  /* User (left) */
+  .chat-bubble.user {
+    background: #D8C4B6;
+    color: #213555;
+    align-self: flex-start;
+    margin-right: auto;
+    border-bottom-right-radius: 6px;
+  }
+  
+  /* System (right) */
+  .chat-bubble.system {
+    background: linear-gradient(135deg, #3E5879, #213555);
+    color: white;
+    align-self: flex-end;
+    margin-left: auto;
+    border-bottom-left-radius: 6px;
+  }
+  
+  /* Input area */
+  .input-area {
+    display: flex;
+    align-items: center;
+    padding: 0.8rem 1rem;
+    border-top: 1px solid #ccc;
+    background: #fff;
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+  }
+  
+  .input-area input {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 25px;
+    outline: none;
+    font-size: 0.95rem;
+    transition: border 0.2s;
+  }
+  
+  .input-area input:focus {
+    border: 1px solid #3E5879;
+  }
+  
+  .send-btn {
+    margin-left: 0.6rem;
+    background: #213555;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    padding: 0.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  
+  .send-btn:hover {
+    background: #3E5879;
+  }
+  
