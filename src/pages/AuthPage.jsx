@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./AuthPage.css";
 import { signupFetch, signinFetch } from "../fetchers/authFetch";
 import { verifyFetch } from "../fetchers/verifyFetch";
+import { FiEye, FiEyeOff } from "react-icons/fi";
 
 export default function AuthPage() {
   const [isSignup, setIsSignup] = useState(false);
@@ -20,6 +21,8 @@ export default function AuthPage() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(0);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   // Timer countdown
@@ -174,7 +177,23 @@ export default function AuthPage() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
+      <div className="auth-layout">
+        <section className="intro-panel">
+          <div className="brand">
+            <span className="brand-badge">Natural Query Explorer</span>
+          </div>
+          <h2 className="intro-title">Query databases using plain English</h2>
+          <p className="intro-subtitle">
+            Upload a database, ask a question, and get instant results.
+            We translate your question into SQL and visualize the data for you.
+          </p>
+          <ul className="intro-steps">
+            <li><span className="step-bullet">1</span> Upload your CSV/DB</li>
+            <li><span className="step-bullet">2</span> Ask in natural language</li>
+            <li><span className="step-bullet">3</span> View results and insights</li>
+          </ul>
+        </section>
+        <div className="auth-card">
         <h1>{isSignup ? (isVerifying ? "Verify Email" : "Sign Up") : "Sign In"}</h1>
 
         {error && !isVerifying && (
@@ -213,34 +232,54 @@ export default function AuthPage() {
               }
             />
 
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={
-                touched.password && formData.password.trim() === ""
-                  ? "invalid-input"
-                  : ""
-              }
-            />
-
-            {isSignup && (
+            <div className="input-with-toggle">
               <input
-                type="password"
-                name="confirmPassword"
-                placeholder="Confirm Password"
-                value={formData.confirmPassword}
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Password"
+                value={formData.password}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
-                  touched.confirmPassword && formData.confirmPassword.trim() === ""
+                  touched.password && formData.password.trim() === ""
                     ? "invalid-input"
                     : ""
                 }
               />
+              <button
+                type="button"
+                className="visibility-toggle"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((v) => !v)}
+              >
+                {showPassword ? <FiEye /> : <FiEyeOff />}
+              </button>
+            </div>
+
+            {isSignup && (
+              <div className="input-with-toggle">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  name="confirmPassword"
+                  placeholder="Confirm Password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={
+                    touched.confirmPassword && formData.confirmPassword.trim() === ""
+                      ? "invalid-input"
+                      : ""
+                  }
+                />
+                <button
+                  type="button"
+                  className="visibility-toggle"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                >
+                  {showConfirmPassword ? <FiEye /> : <FiEyeOff />}
+                </button>
+              </div>
             )}
 
             <button type="submit" disabled={loading}>
@@ -270,12 +309,18 @@ export default function AuthPage() {
                 {isSignup ? "Sign In" : "Sign Up"}
               </span>
             </p>
+            {!isSignup && (
+              <p className="toggle-text">
+                <span onClick={() => navigate("/forgot")}>Forgot password?</span>
+              </p>
+            )}
 
             <button className="guest-btn" onClick={() => navigate("/databases")}>
               Continue as Guest
             </button>
           </>
         )}
+        </div>
       </div>
 
       {/* About Us button */}
