@@ -309,11 +309,11 @@ export default function AuthPage() {
                 {isSignup ? "Sign In" : "Sign Up"}
               </span>
             </p>
-            {!isSignup && (
-              <p className="toggle-text">
-                <span onClick={() => navigate("/forgot")}>Forgot password?</span>
-              </p>
-            )}
+             {!isSignup && (
+               <p className="toggle-text">
+                 <span onClick={() => navigate("/forgot-password")}>Forgot password?</span>
+               </p>
+             )}
 
             <button className="guest-btn" onClick={() => navigate("/databases")}>
               Continue as Guest

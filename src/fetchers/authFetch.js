@@ -18,3 +18,11 @@ export async function meFetch() {
   if (!token) throw new Error("Not authenticated");
   return getFetch("/api/users/me", token);
 }
+
+export async function forgotPasswordFetch(email) {
+  return postFetch("/api/users/forgot-password", { email });
+}
+
+export async function resetPasswordFetch(token, newPassword) {
+  return postFetch("/api/users/reset-password", { token, newPassword });
+}

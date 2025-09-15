@@ -3,12 +3,16 @@ import AuthPage from "./pages/AuthPage";
 import DatabasesPage from "./pages/DatabasesPage";
 import QueryPage from "./pages/QueryPage";
 import HistoryPage from "./pages/HistoryPage"; // ✅ import
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/ResetPasswordPage";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/auth" />} />
       <Route path="/auth" element={<AuthPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/databases" element={<DatabasesPage />} />
       <Route path="/query" element={<QueryPage />} />
       <Route path="/history" element={<HistoryPage />} /> {/* ✅ route */}
