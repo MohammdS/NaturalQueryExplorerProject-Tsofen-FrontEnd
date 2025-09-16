@@ -132,9 +132,10 @@ export default function DatabasesPage() {
         <button
           disabled={!selectedDb}
           className="continue-btn"
-          onClick={() =>
-            navigate("/query", { state: { selectedDb } })
-          }
+          onClick={() => {
+            const selectedDbObject = databases.find(db => db._id === selectedDb);
+            navigate("/query", { state: { selectedDb: selectedDbObject } });
+          }}
         >
           Continue to Query Page
         </button>
