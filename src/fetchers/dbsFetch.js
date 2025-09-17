@@ -44,6 +44,25 @@ export async function deleteDbFetch(id, token) {
   return res.json();
 }
 
+// Create a new empty database
+export async function createDbFetch(name, token) {
+  const res = await fetch(`${API_BASE}/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || "Failed to create database");
+  }
+
+  return res.json();
+}
+
 
 // Get tables for a specific DB file
 export async function getTablesFetch(filename) {
@@ -51,4 +70,15 @@ export async function getTablesFetch(filename) {
     if (!res.ok) throw new Error("Failed to fetch tables");
     return res.json();
   }
+
+// Download a DB file
+export async function downloadDbFetch(id, token) {
+  const res = await fetch(`${API_BASE}/${id}/download`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) throw new Error("Failed to download database");
+  return res.blob();
+}
   
