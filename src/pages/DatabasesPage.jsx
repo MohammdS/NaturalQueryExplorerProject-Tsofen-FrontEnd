@@ -6,15 +6,14 @@ import {
   uploadDbFetch,
   deleteDbFetch,
 } from "../fetchers/dbsFetch";
+import { useAuth } from "../context/AuthContext";
 
 export default function DatabasesPage() {
   const [databases, setDatabases] = useState([]);
-  const [selectedDb, setSelectedDb] = useState(null);
+  const [selectedDb, setSelectedDb] = useState(null); // full db object
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  // Replace this with your auth token (from login)
-  const token = localStorage.getItem("token");
+  const { token } = useAuth();
 
   // Load DBs on page load
   useEffect(() => {
@@ -57,7 +56,7 @@ export default function DatabasesPage() {
     try {
       await deleteDbFetch(id, token);
       setDatabases(databases.filter((db) => db._id !== id));
-      if (selectedDb === id) setSelectedDb(null);
+      if (selectedDb?._id === id) setSelectedDb(null);
     } catch (err) {
       setError(err.message);
     }
@@ -100,9 +99,7 @@ export default function DatabasesPage() {
                   Size: {(db.size / 1024).toFixed(1)} KB
                 </p>
                 <div className="db-actions">
-                  <button onClick={() => setSelectedDb(db._id)}>
-                    Select DB
-                  </button>
+                  <button onClick={() => setSelectedDb(db)}>Select DB</button>
                   <button
                     onClick={() => handleDelete(db._id)}
                     className="delete-btn"
@@ -132,9 +129,7 @@ export default function DatabasesPage() {
         <button
           disabled={!selectedDb}
           className="continue-btn"
-          onClick={() =>
-            navigate("/query", { state: { selectedDb } })
-          }
+          onClick={() => navigate("/query", { state: { selectedDb } })}
         >
           Continue to Query Page
         </button>

@@ -1,11 +1,9 @@
-const API_BASE = "http://localhost:3000/api/dbs";
+const API_BASE = "http://localhost:3000/api/dbs"; // fallback if Vite env not used elsewhere
 
 // Get all user databases
 export async function getDbsFetch(token) {
   const res = await fetch(API_BASE, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (!res.ok) throw new Error("Failed to fetch databases");
   return res.json();
@@ -19,7 +17,7 @@ export async function uploadDbFetch(file, token) {
   const res = await fetch(API_BASE, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
     body: formData,
   });
@@ -36,19 +34,17 @@ export async function uploadDbFetch(file, token) {
 export async function deleteDbFetch(id, token) {
   const res = await fetch(`${API_BASE}/${id}`, {
     method: "DELETE",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   if (!res.ok) throw new Error("Failed to delete database");
   return res.json();
 }
 
-
 // Get tables for a specific DB file
-export async function getTablesFetch(filename) {
-    const res = await fetch(`${API_BASE}/${filename}/tables`);
-    if (!res.ok) throw new Error("Failed to fetch tables");
-    return res.json();
-  }
-  
+export async function getTablesFetch(filename, token) {
+  const res = await fetch(`${API_BASE}/${filename}/tables`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!res.ok) throw new Error("Failed to fetch tables");
+  return res.json();
+}

@@ -4,6 +4,8 @@ import "./AuthPage.css";
 import { signupFetch, signinFetch } from "../fetchers/authFetch";
 import { verifyFetch } from "../fetchers/verifyFetch";
 import { FiEye, FiEyeOff } from "react-icons/fi";
+import { saveToken } from "../fetchers/apiFetch";
+import { useAuth } from "../context/AuthContext";
 
 export default function AuthPage() {
   const [isSignup, setIsSignup] = useState(false);
@@ -24,6 +26,7 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
+  const { setVerifiedToken } = useAuth();
 
   // Timer countdown
   useEffect(() => {
@@ -98,8 +101,9 @@ export default function AuthPage() {
           email: formData.email.trim(),
           code: verificationCode,
         });
-        // ✅ Save token
-        localStorage.setItem("token", result.token);
+        // ✅ Save token via context helpers
+        saveToken(result.token);
+        setVerifiedToken(result.token);
         setShowVerifyModal(false);
         navigate("/databases");
       } catch (err) {
@@ -141,8 +145,8 @@ export default function AuthPage() {
           email: formData.email.trim(),
           password: formData.password,
         });
-        // ✅ Save token
-        localStorage.setItem("token", result.token);
+        saveToken(result.token);
+        setVerifiedToken(result.token);
         navigate("/databases");
       }
     } catch (err) {
@@ -184,89 +188,76 @@ export default function AuthPage() {
           </div>
           <h2 className="intro-title">Query databases using plain English</h2>
           <p className="intro-subtitle">
-            Upload a database, ask a question, and get instant results.
-            We translate your question into SQL and visualize the data for you.
+            Upload a database, ask a question, and get instant results. We
+            translate your question into SQL and visualize the data for you.
           </p>
           <ul className="intro-steps">
-            <li><span className="step-bullet">1</span> Upload your CSV/DB</li>
-            <li><span className="step-bullet">2</span> Ask in natural language</li>
-            <li><span className="step-bullet">3</span> View results and insights</li>
+            <li>
+              <span className="step-bullet">1</span> Upload your CSV/DB
+            </li>
+            <li>
+              <span className="step-bullet">2</span> Ask in natural language
+            </li>
+            <li>
+              <span className="step-bullet">3</span> View results and insights
+            </li>
           </ul>
         </section>
         <div className="auth-card">
-        <h1>{isSignup ? (isVerifying ? "Verify Email" : "Sign Up") : "Sign In"}</h1>
+          <h1>
+            {isSignup ? (isVerifying ? "Verify Email" : "Sign Up") : "Sign In"}
+          </h1>
 
-        {error && !isVerifying && (
-          <div className="error-msg">
-            {error.split("\n").map((line, i) => (
-              <div key={i}>• {line}</div>
-            ))}
-          </div>
-        )}
+          {error && !isVerifying && (
+            <div className="error-msg">
+              {error.split("\n").map((line, i) => (
+                <div key={i}>• {line}</div>
+              ))}
+            </div>
+          )}
 
-        {!isVerifying ? (
-          <form onSubmit={handleSubmit} noValidate>
-            {isSignup && (
+          {!isVerifying ? (
+            <form onSubmit={handleSubmit} noValidate>
+              {isSignup && (
+                <input
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  className={
+                    touched.name && formData.name.trim() === ""
+                      ? "invalid-input"
+                      : ""
+                  }
+                />
+              )}
+
               <input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={formData.name}
+                type="email"
+                name="email"
+                placeholder="Email"
+                value={formData.email}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 className={
-                  touched.name && formData.name.trim() === "" ? "invalid-input" : ""
-                }
-              />
-            )}
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Email"
-              value={formData.email}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              className={
-                touched.email && formData.email.trim() === "" ? "invalid-input" : ""
-              }
-            />
-
-            <div className="input-with-toggle">
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={
-                  touched.password && formData.password.trim() === ""
+                  touched.email && formData.email.trim() === ""
                     ? "invalid-input"
                     : ""
                 }
               />
-              <button
-                type="button"
-                className="visibility-toggle"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                onClick={() => setShowPassword((v) => !v)}
-              >
-                {showPassword ? <FiEye /> : <FiEyeOff />}
-              </button>
-            </div>
 
-            {isSignup && (
               <div className="input-with-toggle">
                 <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  placeholder="Confirm Password"
-                  value={formData.confirmPassword}
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
                   onChange={handleChange}
                   onBlur={handleBlur}
                   className={
-                    touched.confirmPassword && formData.confirmPassword.trim() === ""
+                    touched.password && formData.password.trim() === ""
                       ? "invalid-input"
                       : ""
                   }
@@ -274,52 +265,87 @@ export default function AuthPage() {
                 <button
                   type="button"
                   className="visibility-toggle"
-                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                  onClick={() => setShowConfirmPassword((v) => !v)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  onClick={() => setShowPassword((v) => !v)}
                 >
-                  {showConfirmPassword ? <FiEye /> : <FiEyeOff />}
+                  {showPassword ? <FiEye /> : <FiEyeOff />}
                 </button>
               </div>
-            )}
 
-            <button type="submit" disabled={loading}>
-              {loading ? "Please wait…" : isSignup ? "Sign Up" : "Sign In"}
-            </button>
-          </form>
-        ) : null}
+              {isSignup && (
+                <div className="input-with-toggle">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    placeholder="Confirm Password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={
+                      touched.confirmPassword &&
+                      formData.confirmPassword.trim() === ""
+                        ? "invalid-input"
+                        : ""
+                    }
+                  />
+                  <button
+                    type="button"
+                    className="visibility-toggle"
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                    onClick={() => setShowConfirmPassword((v) => !v)}
+                  >
+                    {showConfirmPassword ? <FiEye /> : <FiEyeOff />}
+                  </button>
+                </div>
+              )}
 
-        {!isVerifying && (
-          <>
-            <p className="toggle-text">
-              {isSignup ? "Already have an account?" : "Don't have an account?"}{" "}
-              <span
-                onClick={() => {
-                  setIsSignup(!isSignup);
-                  setIsVerifying(false);
-                  setError("");
-                  setTouched({});
-                  setFormData({
-                    name: "",
-                    email: "",
-                    password: "",
-                    confirmPassword: "",
-                  });
-                }}
-              >
-                {isSignup ? "Sign In" : "Sign Up"}
-              </span>
-            </p>
-            {!isSignup && (
+              <button type="submit" disabled={loading}>
+                {loading ? "Please wait…" : isSignup ? "Sign Up" : "Sign In"}
+              </button>
+            </form>
+          ) : null}
+
+          {!isVerifying && (
+            <>
               <p className="toggle-text">
-                <span onClick={() => navigate("/forgot")}>Forgot password?</span>
+                {isSignup
+                  ? "Already have an account?"
+                  : "Don't have an account?"}{" "}
+                <span
+                  onClick={() => {
+                    setIsSignup(!isSignup);
+                    setIsVerifying(false);
+                    setError("");
+                    setTouched({});
+                    setFormData({
+                      name: "",
+                      email: "",
+                      password: "",
+                      confirmPassword: "",
+                    });
+                  }}
+                >
+                  {isSignup ? "Sign In" : "Sign Up"}
+                </span>
               </p>
-            )}
+              {!isSignup && (
+                <p className="toggle-text">
+                  <span onClick={() => navigate("/forgot")}>
+                    Forgot password?
+                  </span>
+                </p>
+              )}
 
-            <button className="guest-btn" onClick={() => navigate("/databases")}>
-              Continue as Guest
-            </button>
-          </>
-        )}
+              <button
+                className="guest-btn"
+                onClick={() => navigate("/databases")}
+              >
+                Continue as Guest
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -330,9 +356,18 @@ export default function AuthPage() {
 
       {/* Verify Modal */}
       {showVerifyModal && (
-        <div className="modal-overlay" onClick={() => setShowVerifyModal(false)}>
-          <div className="modal-content verify-modal" onClick={(e) => e.stopPropagation()}>
-            <button className="close-btn" onClick={() => setShowVerifyModal(false)}>
+        <div
+          className="modal-overlay"
+          onClick={() => setShowVerifyModal(false)}
+        >
+          <div
+            className="modal-content verify-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="close-btn"
+              onClick={() => setShowVerifyModal(false)}
+            >
               ✖
             </button>
             <h2>Email Verification</h2>
@@ -357,7 +392,9 @@ export default function AuthPage() {
                 : "Resend Code"}
             </button>
 
-            {error && isVerifying && <div className="verify-error">{error}</div>}
+            {error && isVerifying && (
+              <div className="verify-error">{error}</div>
+            )}
           </div>
         </div>
       )}
@@ -371,9 +408,10 @@ export default function AuthPage() {
             </button>
             <h2>About Us</h2>
             <p>
-              This project was developed as part of the Dell–Tsofen program (2025).
-              It allows users to upload databases and query them using natural language.
-              The system translates questions into SQL and displays results.
+              This project was developed as part of the Dell–Tsofen program
+              (2025). It allows users to upload databases and query them using
+              natural language. The system translates questions into SQL and
+              displays results.
             </p>
             <p>
               <strong>Team:</strong> Student Project – University of Haifa
