@@ -98,8 +98,14 @@ export default function AuthPage() {
           email: formData.email.trim(),
           code: verificationCode,
         });
-        // ✅ Save token
+        // ✅ Save token and user info
         localStorage.setItem("token", result.token);
+        if (result.user && result.user.name) {
+          localStorage.setItem("user", result.user.name);
+        } else if (formData.name) {
+          // Fallback to the name from signup form
+          localStorage.setItem("user", formData.name.trim());
+        }
         setShowVerifyModal(false);
         navigate("/databases");
       } catch (err) {
@@ -141,8 +147,11 @@ export default function AuthPage() {
           email: formData.email.trim(),
           password: formData.password,
         });
-        // ✅ Save token
+        // ✅ Save token and user info
         localStorage.setItem("token", result.token);
+        if (result.user && result.user.name) {
+          localStorage.setItem("user", result.user.name);
+        }
         navigate("/databases");
       }
     } catch (err) {

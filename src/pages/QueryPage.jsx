@@ -2,15 +2,18 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiArrowUp, FiPlay } from "react-icons/fi";
 import "./QueryPage.css";
+import { generateSQLFetch, executeSQLFetch } from "../fetchers/queryFetch";
 
 export default function QueryPage() {
   const [naturalLanguageQuery, setNaturalLanguageQuery] = useState("");
   const [generatedSQL, setGeneratedSQL] = useState("");
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   // We expect database name from DatabasesPage
   const { selectedDb } = location.state || {};
@@ -26,11 +29,32 @@ export default function QueryPage() {
     if (!naturalLanguageQuery.trim()) return;
 
     setLoading(true);
+    setError("");
     try {
-      // Mock SQL generation for now
-      const mockSQL = `SELECT * FROM users WHERE name LIKE '%${naturalLanguageQuery}%';`;
-      setGeneratedSQL(mockSQL);
+      // Debug: Log what we're sending
+      console.log("Selected DB object:", selectedDb);
+      console.log("All DB fields:", Object.keys(selectedDb));
+      console.log("originalName:", selectedDb.originalName);
+      console.log("storedFilename:", selectedDb.storedFilename);
+      console.log("filename:", selectedDb.filename);
+      console.log("name:", selectedDb.name);
+      console.log("_id:", selectedDb._id);
+      console.log("Sending dbFilename:", selectedDb.storedFilename);
+      console.log("Sending prompt:", naturalLanguageQuery.trim());
+      
+      const response = await generateSQLFetch(
+        naturalLanguageQuery.trim(),
+        selectedDb.storedFilename, // Use storedFilename as backend expects
+        token
+      );
+      
+      // Set the generated SQL from backend response
+      setGeneratedSQL(response.generatedSQL || "");
+      
+      // Clear previous results when generating new SQL
+      setResults([]);
     } catch (error) {
+      setError(error.message || "Failed to generate SQL");
       console.error("Error generating SQL:", error);
     } finally {
       setLoading(false);
@@ -41,15 +65,18 @@ export default function QueryPage() {
     if (!generatedSQL.trim()) return;
 
     setLoading(true);
+    setError("");
     try {
-      // Mock results for now
-      const mockResults = [
-        { id: 1, name: "Alice Johnson", email: "alice@example.com", age: 28 },
-        { id: 2, name: "Bob Smith", email: "bob@example.com", age: 32 },
-        { id: 3, name: "Charlie Brown", email: "charlie@example.com", age: 25 }
-      ];
-      setResults(mockResults);
+      const response = await executeSQLFetch(
+        generatedSQL.trim(),
+        selectedDb.storedFilename, // Use storedFilename as backend expects
+        token
+      );
+      
+      // Set the results from backend response
+      setResults(response.rows || []);
     } catch (error) {
+      setError(error.message || "Failed to execute SQL");
       console.error("Error running query:", error);
     } finally {
       setLoading(false);
@@ -110,6 +137,13 @@ export default function QueryPage() {
 
         <div className="results-section">
           <h2>Results</h2>
+          
+          {error && (
+            <div className="error-message">
+              <strong>Error:</strong> {error}
+            </div>
+          )}
+          
           <div className="results-table">
             {results.length > 0 ? (
               <table>

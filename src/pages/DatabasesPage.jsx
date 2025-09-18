@@ -9,6 +9,7 @@ import {
   createDbFetch,
   downloadDbFetch,
 } from "../fetchers/dbsFetch";
+import { meFetch } from "../fetchers/authFetch";
 
 export default function DatabasesPage() {
   const [databases, setDatabases] = useState([]);
@@ -18,24 +19,42 @@ export default function DatabasesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState(""); // "upload" or "create"
   const [createDbName, setCreateDbName] = useState("");
+  const [userName, setUserName] = useState("Guest");
   const menuRef = useRef(null);
   const menuButtonRef = useRef(null);
 
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-  const userName = localStorage.getItem("user") || "Guest"; // استبدل هذا بحسب API
 
-  // Load DBs on page load
+  // Load user name and DBs on page load
   useEffect(() => {
-    async function loadDbs() {
+    async function loadUserAndDbs() {
       try {
+        // First try to get user name from localStorage
+        const storedUserName = localStorage.getItem("user");
+        if (storedUserName) {
+          setUserName(storedUserName);
+        } else {
+          // If not in localStorage, fetch from API
+          try {
+            const userData = await meFetch();
+            if (userData && userData.name) {
+              setUserName(userData.name);
+              localStorage.setItem("user", userData.name);
+            }
+          } catch (userErr) {
+            console.log("Could not fetch user data:", userErr);
+          }
+        }
+        
+        // Load databases
         const data = await getDbsFetch(token);
         setDatabases(data);
       } catch (err) {
         setError(err.message);
       }
     }
-    loadDbs();
+    loadUserAndDbs();
   }, [token]);
 
   // Close menu when clicking outside
@@ -92,6 +111,9 @@ export default function DatabasesPage() {
       setDatabases((prev) => [res.db, ...prev]);
       setCreateDbName("");
       setModalOpen(false);
+      setModalMode("");
+      
+      // Stay on DatabasesPage - don't navigate away
     } catch (err) {
       setError(err.message);
     }
@@ -114,6 +136,7 @@ export default function DatabasesPage() {
     try {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      setUserName("Guest");
     } catch (e) {
       // ignore storage errors
     }

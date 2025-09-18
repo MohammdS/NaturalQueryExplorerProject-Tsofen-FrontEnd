@@ -46,13 +46,18 @@ export async function deleteDbFetch(id, token) {
 
 // Create a new empty database
 export async function createDbFetch(name, token) {
-  const res = await fetch(`${API_BASE}/create`, {
+  // Create an empty file with the specified name
+  const emptyFile = new File([], `${name}.db`, { type: 'application/octet-stream' });
+  
+  const formData = new FormData();
+  formData.append("dbFile", emptyFile);
+
+  const res = await fetch(API_BASE, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ name }),
+    body: formData,
   });
 
   if (!res.ok) {

@@ -242,4 +242,15 @@
     width: auto;
   }
 }
+
+/* Error Message Styling */
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 8px;
+  border: 1px solid #fcc;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
   
