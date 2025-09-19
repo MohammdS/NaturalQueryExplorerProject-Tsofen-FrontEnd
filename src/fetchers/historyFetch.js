@@ -1,4 +1,4 @@
-const API_BASE = "http://localhost:3000/api/history";
+const API_BASE = "http://localhost:3000/api/query/history";
 
 // Get user's query history
 export async function getHistoryFetch(token) {
