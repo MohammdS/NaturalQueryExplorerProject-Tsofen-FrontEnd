@@ -129,7 +129,7 @@ export default function AuthPage() {
         // ✅ Show modal immediately
         setIsVerifying(true);
         setShowVerifyModal(true);
-        setTimer(30);
+        setTimer(120);
         setError("");
 
         // Call backend in background
@@ -172,7 +172,7 @@ export default function AuthPage() {
 
   // ✅ Resend code
   const handleResend = () => {
-    setTimer(30);
+    setTimer(120);
     setVerificationCode("");
     setError("");
     signupFetch({
