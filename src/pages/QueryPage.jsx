@@ -10,6 +10,8 @@ export default function QueryPage() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [writeMessage, setWriteMessage] = useState(null);
+  const [writeDetails, setWriteDetails] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -41,16 +43,16 @@ export default function QueryPage() {
       console.log("_id:", selectedDb._id);
       console.log("Sending dbFilename:", selectedDb.storedFilename);
       console.log("Sending prompt:", naturalLanguageQuery.trim());
-      
+
       const response = await generateSQLFetch(
         naturalLanguageQuery.trim(),
         selectedDb.storedFilename, // Use storedFilename as backend expects
         token
       );
-      
+
       // Set the generated SQL from backend response
       setGeneratedSQL(response.generatedSQL || "");
-      
+
       // Clear previous results when generating new SQL
       setResults([]);
     } catch (error) {
@@ -72,9 +74,23 @@ export default function QueryPage() {
         selectedDb.storedFilename, // Use storedFilename as backend expects
         token
       );
-      
-      // Set the results from backend response
-      setResults(response.rows || []);
+
+      if (response && Array.isArray(response.rows)) {
+        // SELECT result
+        setResults(response.rows);
+        setWriteMessage(null);
+        setWriteDetails(null);
+      } else if (response && response.message) {
+        // WRITE result (INSERT/UPDATE/DELETE/DDL)
+        setResults([]);
+        setWriteMessage(response.message);
+        setWriteDetails(response.result || null);
+      } else {
+        // Fallback for any non-standard shape
+        setResults([]);
+        setWriteMessage("Statement executed successfully.");
+        setWriteDetails(null);
+      }
     } catch (error) {
       setError(error.message || "Failed to execute SQL");
       console.error("Error running query:", error);
@@ -102,8 +118,8 @@ export default function QueryPage() {
                 onChange={(e) => setNaturalLanguageQuery(e.target.value)}
                 rows={1}
               />
-              <button 
-                className="generate-btn" 
+              <button
+                className="generate-btn"
                 onClick={handleGenerateSQL}
                 disabled={loading || !naturalLanguageQuery.trim()}
                 title="Generate SQL from your question"
@@ -122,8 +138,8 @@ export default function QueryPage() {
                 onChange={(e) => setGeneratedSQL(e.target.value)}
                 rows={2}
               />
-              <button 
-                className="run-btn" 
+              <button
+                className="run-btn"
                 onClick={handleRunQuery}
                 disabled={loading || !generatedSQL.trim()}
                 title="Execute this SQL query"
@@ -137,13 +153,28 @@ export default function QueryPage() {
 
         <div className="results-section">
           <h2>Results</h2>
-          
+
           {error && (
             <div className="error-message">
               <strong>Error:</strong> {error}
             </div>
           )}
-          
+
+          {writeMessage && (
+            <div className="success-msg" role="status">
+              {writeMessage}
+              {writeDetails?.changes != null && (
+                <span style={{ marginLeft: 8, color: "#475569" }}>
+                  (changes: {writeDetails.changes}
+                  {writeDetails.lastInsertRowid
+                    ? `, last id: ${writeDetails.lastInsertRowid}`
+                    : ""}
+                  )
+                </span>
+              )}
+            </div>
+          )}
+
           <div className="results-table">
             {results.length > 0 ? (
               <table>
