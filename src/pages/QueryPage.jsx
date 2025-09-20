@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FiArrowUp, FiPlay } from "react-icons/fi";
 import "./QueryPage.css";
@@ -12,6 +12,10 @@ export default function QueryPage() {
   const [error, setError] = useState("");
   const [writeMessage, setWriteMessage] = useState(null);
   const [writeDetails, setWriteDetails] = useState(null);
+  
+  // Export dropdown state
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
+  const exportDropdownRef = useRef(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -36,6 +40,20 @@ export default function QueryPage() {
       setGeneratedSQL(preFilledSQL);
     }
   }, [preFilledQuery, preFilledSQL]);
+
+  // Close export dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target)) {
+        setShowExportDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleGenerateSQL = async () => {
     if (!naturalLanguageQuery.trim()) return;
@@ -110,6 +128,62 @@ export default function QueryPage() {
     }
   };
 
+  const exportToCSV = () => {
+    if (results.length === 0) return;
+    
+    const headers = Object.keys(results[0]);
+    const csvContent = [
+      headers.join(','),
+      ...results.map(row => 
+        headers.map(header => {
+          const value = row[header];
+          // Handle values that contain commas, quotes, or newlines
+          if (value === null || value === undefined) return '';
+          const stringValue = String(value);
+          if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+            return `"${stringValue.replace(/"/g, '""')}"`;
+          }
+          return stringValue;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `query_results_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportToJSON = () => {
+    if (results.length === 0) return;
+    
+    const jsonData = {
+      query: {
+        naturalLanguage: naturalLanguageQuery,
+        sql: generatedSQL,
+        database: selectedDb?.originalName
+      },
+      executedAt: new Date().toISOString(),
+      results: results
+    };
+
+    const jsonString = JSON.stringify(jsonData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `query_results_${new Date().toISOString().split('T')[0]}.json`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="query-container">
       <div className="query-header">
@@ -134,13 +208,73 @@ export default function QueryPage() {
       <div className="query-content">
         <div className="input-section">
           <div className="input-group">
-            <div className="input-with-icon">
+            <div className="input-with-icon" style={{ position: 'relative' }}>
               <textarea
                 placeholder="Describe the query you need…"
                 value={naturalLanguageQuery}
-                onChange={(e) => setNaturalLanguageQuery(e.target.value)}
+                onChange={(e) => {
+                  setNaturalLanguageQuery(e.target.value);
+                  // Auto-resize textarea
+                  e.target.style.height = 'auto';
+                  e.target.style.height = Math.min(e.target.scrollHeight, 120) + 'px';
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    if (naturalLanguageQuery.trim() && !loading) {
+                      handleGenerateSQL();
+                    }
+                  }
+                }}
                 rows={1}
+                style={{
+                  resize: 'none',
+                  overflow: 'hidden',
+                  minHeight: '40px',
+                  maxHeight: '120px',
+                  paddingRight: naturalLanguageQuery.trim() ? '80px' : '50px',
+                  paddingTop: naturalLanguageQuery.trim() ? '8px' : '8px'
+                }}
               />
+              {naturalLanguageQuery.trim() && (
+                <button
+                  onClick={() => {
+                    setNaturalLanguageQuery('');
+                  }}
+                  style={{
+                    position: 'absolute',
+                    right: '60px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.7rem',
+                    color: '#ccc',
+                    padding: '2px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '16px',
+                    height: '16px',
+                    transition: 'all 0.2s ease',
+                    zIndex: 10,
+                    opacity: 0.6
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.color = '#999';
+                    e.target.style.opacity = '1';
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.color = '#ccc';
+                    e.target.style.opacity = '0.6';
+                  }}
+                  title="Clear prompt"
+                >
+                  ✕
+                </button>
+              )}
               <button
                 className="generate-btn"
                 onClick={handleGenerateSQL}
@@ -175,7 +309,124 @@ export default function QueryPage() {
         </div>
 
         <div className="results-section">
-          <h2>Results</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2>Results</h2>
+            {results.length > 0 && (
+              <div ref={exportDropdownRef} style={{ position: "relative" }}>
+                <button
+                  onClick={() => setShowExportDropdown(!showExportDropdown)}
+                  style={{
+                    background: "rgba(255, 255, 255, 0.95)",
+                    color: "#213555",
+                    border: "1px solid #D8C4B6",
+                    padding: "0.4rem 0.8rem",
+                    borderRadius: "12px",
+                    cursor: "pointer",
+                    fontSize: "0.8rem",
+                    fontWeight: "600",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.4rem",
+                    transition: "all 0.2s ease",
+                    boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                    backdropFilter: "blur(10px)"
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.transform = "translateY(-1px)";
+                    e.target.style.boxShadow = "0 2px 6px rgba(0, 0, 0, 0.15)";
+                    e.target.style.borderColor = "#213555";
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.transform = "translateY(0)";
+                    e.target.style.boxShadow = "0 1px 3px rgba(0, 0, 0, 0.1)";
+                    e.target.style.borderColor = "#D8C4B6";
+                  }}
+                >
+                  Export {showExportDropdown ? "▲" : "▼"}
+                </button>
+                
+                {showExportDropdown && (
+                  <div style={{
+                    position: "absolute",
+                    top: "100%",
+                    right: "0",
+                    marginTop: "0.3rem",
+                    background: "rgba(255, 255, 255, 0.98)",
+                    border: "1px solid #D8C4B6",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                    backdropFilter: "blur(10px)",
+                    zIndex: 1000,
+                    minWidth: "120px"
+                  }}>
+                    <button
+                      onClick={() => {
+                        exportToCSV();
+                        setShowExportDropdown(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        padding: "0.6rem 0.8rem",
+                        cursor: "pointer",
+                        fontSize: "0.8rem",
+                        fontWeight: "500",
+                        color: "#213555",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        borderRadius: "12px 12px 0 0",
+                        transition: "background-color 0.2s ease"
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.backgroundColor = "rgba(33, 53, 85, 0.1)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      CSV
+                    </button>
+                    <div style={{
+                      height: "1px",
+                      background: "rgba(216, 196, 182, 0.3)",
+                      margin: "0 0.5rem"
+                    }}></div>
+                    <button
+                      onClick={() => {
+                        exportToJSON();
+                        setShowExportDropdown(false);
+                      }}
+                      style={{
+                        width: "100%",
+                        background: "none",
+                        border: "none",
+                        padding: "0.6rem 0.8rem",
+                        cursor: "pointer",
+                        fontSize: "0.8rem",
+                        fontWeight: "500",
+                        color: "#213555",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                        borderRadius: "0 0 12px 12px",
+                        transition: "background-color 0.2s ease"
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.backgroundColor = "rgba(33, 53, 85, 0.1)";
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.backgroundColor = "transparent";
+                      }}
+                    >
+                      JSON
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
 
           {error && (
             <div className="error-message">

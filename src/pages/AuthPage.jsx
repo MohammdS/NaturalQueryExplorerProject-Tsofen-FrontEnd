@@ -324,9 +324,6 @@ export default function AuthPage() {
                </p>
              )}
 
-            <button className="guest-btn" onClick={() => navigate("/databases")}>
-              Continue as Guest
-            </button>
           </>
         )}
         </div>
