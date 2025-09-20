@@ -17,8 +17,8 @@ export default function QueryPage() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // We expect database name from DatabasesPage
-  const { selectedDb } = location.state || {};
+  // We expect database name from DatabasesPage or pre-filled data from HistoryPage
+  const { selectedDb, preFilledQuery, preFilledSQL, fromHistory } = location.state || {};
 
   // ✅ Prevent navigation from firing on every render
   useEffect(() => {
@@ -26,6 +26,16 @@ export default function QueryPage() {
       navigate("/databases");
     }
   }, [selectedDb, navigate]);
+
+  // ✅ Pre-fill queries when coming from history
+  useEffect(() => {
+    if (preFilledQuery) {
+      setNaturalLanguageQuery(preFilledQuery);
+    }
+    if (preFilledSQL) {
+      setGeneratedSQL(preFilledSQL);
+    }
+  }, [preFilledQuery, preFilledSQL]);
 
   const handleGenerateSQL = async () => {
     if (!naturalLanguageQuery.trim()) return;
@@ -72,7 +82,8 @@ export default function QueryPage() {
       const response = await executeSQLFetch(
         generatedSQL.trim(),
         selectedDb.storedFilename, // Use storedFilename as backend expects
-        token
+        token,
+        naturalLanguageQuery.trim() // Pass the original prompt for history
       );
 
       if (response && Array.isArray(response.rows)) {
@@ -102,9 +113,21 @@ export default function QueryPage() {
   return (
     <div className="query-container">
       <div className="query-header">
-        <h1>{selectedDb?.originalName}</h1>
-        <button className="back-btn" onClick={() => navigate("/databases")}>
-          Back to Databases
+        <div>
+          <h1>{selectedDb?.originalName}</h1>
+          {fromHistory && (
+            <p style={{ 
+              margin: "0.5rem 0 0 0", 
+              color: "#666", 
+              fontSize: "0.9rem",
+              fontStyle: "italic" 
+            }}>
+              Loaded from history - ready to run again
+            </p>
+          )}
+        </div>
+        <button className="back-btn" onClick={() => navigate(fromHistory ? "/history" : "/databases")}>
+          {fromHistory ? "Back to History" : "Back to Databases"}
         </button>
       </div>
 

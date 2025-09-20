@@ -1,28 +1,42 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { getHistoryFetch } from "../fetchers/historyFetch";
+import { getDbsFetch } from "../fetchers/dbsFetch";
 
 export default function HistoryPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [history, setHistory] = useState([]);
+  
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  
+  // Filter states
+  const [dateFilter, setDateFilter] = useState("");
+  const [databaseFilter, setDatabaseFilter] = useState("");
+  const [allDatabases, setAllDatabases] = useState([]);
 
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    async function loadHistory() {
+    async function loadHistoryAndDatabases() {
       try {
         setLoading(true);
         setError("");
         
-        const historyData = await getHistoryFetch(token);
+        // Load both history and databases in parallel
+        const [historyData, databasesData] = await Promise.all([
+          getHistoryFetch(token),
+          getDbsFetch(token)
+        ]);
         
         console.log("=== HISTORY DATA DEBUG ===");
         console.log("Raw history data:", historyData);
         console.log("First item:", historyData[0]);
         
-        // Handle different response structures
+        // Handle different response structures for history
         let finalHistory = [];
         if (Array.isArray(historyData)) {
           finalHistory = historyData;
@@ -36,19 +50,77 @@ export default function HistoryPage() {
         
         console.log("Final history items:", finalHistory);
         setHistory(finalHistory);
+        
+        // Handle databases data
+        let finalDatabases = [];
+        if (Array.isArray(databasesData)) {
+          finalDatabases = databasesData;
+        } else if (databasesData && Array.isArray(databasesData.databases)) {
+          finalDatabases = databasesData.databases;
+        } else if (databasesData && Array.isArray(databasesData.data)) {
+          finalDatabases = databasesData.data;
+        } else {
+          finalDatabases = [];
+        }
+        
+        console.log("All databases:", finalDatabases);
+        setAllDatabases(finalDatabases);
       } catch (err) {
-        setError(err.message || "Failed to load history");
+        setError(err.message || "Failed to load data");
       } finally {
         setLoading(false);
       }
     }
 
     if (token) {
-      loadHistory();
+      loadHistoryAndDatabases();
     } else {
       navigate("/auth");
     }
   }, [token, navigate]);
+
+  // Get all available databases for filter dropdown
+  const availableDatabases = useMemo(() => {
+    return allDatabases.map(db => {
+      // Handle different database object structures
+      const originalName = db.originalName || db.name || db.filename || db.storedFilename || "Unknown";
+      return originalName.replace(/^\d+_/, '');
+    }).sort();
+  }, [allDatabases]);
+
+  // Search and filter logic
+  const filteredHistory = useMemo(() => {
+    let filtered = [...history];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(item => {
+        const prompt = (item.prompt || item.naturalLanguageQuery || item.query || "").toLowerCase();
+        const sql = (item.sql || item.generatedSQL || item.finalSQL || "").toLowerCase();
+        return prompt.includes(query) || sql.includes(query);
+      });
+    }
+
+    // Date filter
+    if (dateFilter) {
+      filtered = filtered.filter(item => {
+        if (!item.createdAt) return false;
+        const itemDate = new Date(item.createdAt).toISOString().split('T')[0];
+        return itemDate === dateFilter;
+      });
+    }
+
+    // Database filter
+    if (databaseFilter) {
+      filtered = filtered.filter(item => {
+        const dbName = (item.dbFilename || item.databaseName || "Unknown").replace(/^\d+_/, '');
+        return dbName === databaseFilter;
+      });
+    }
+
+    return filtered;
+  }, [history, searchQuery, dateFilter, databaseFilter]);
 
 
   if (loading) {
@@ -86,6 +158,16 @@ export default function HistoryPage() {
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+          }
+          @keyframes expandSearch {
+            0% { 
+              width: 50px; 
+              opacity: 0.8; 
+            }
+            100% { 
+              width: 350px; 
+              opacity: 1; 
+            }
           }
         `}</style>
       </div>
@@ -152,6 +234,201 @@ export default function HistoryPage() {
               ← Back to Databases
         </button>
       </div>
+        </div>
+
+        {/* Search Bar and Filters */}
+        <div style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          alignItems: "center",
+          gap: "1rem",
+          marginBottom: "2rem"
+        }}>
+          {/* Date Filter */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "20px",
+            padding: "0.5rem 1rem",
+            border: "2px solid #D8C4B6",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(10px)",
+            transition: "all 0.3s ease"
+          }}>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                fontSize: "0.9rem",
+                color: "#213555",
+                cursor: "pointer"
+              }}
+              title="Filter by date"
+            />
+            {dateFilter && (
+              <button
+                onClick={() => setDateFilter("")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#666",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  padding: "0.1rem 0.3rem",
+                  marginLeft: "0.5rem"
+                }}
+                title="Clear date filter"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Database Filter */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "20px",
+            padding: "0.5rem 1rem",
+            border: "2px solid #D8C4B6",
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(10px)",
+            transition: "all 0.3s ease"
+          }}>
+            <select
+              value={databaseFilter}
+              onChange={(e) => setDatabaseFilter(e.target.value)}
+              style={{
+                border: "none",
+                outline: "none",
+                background: "transparent",
+                fontSize: "0.9rem",
+                color: "#213555",
+                cursor: "pointer",
+                minWidth: "120px"
+              }}
+              title="Filter by database"
+            >
+              <option value="">All Databases</option>
+              {availableDatabases.map(db => (
+                <option key={db} value={db}>
+                  {db}
+                </option>
+              ))}
+            </select>
+            {databaseFilter && (
+              <button
+                onClick={() => setDatabaseFilter("")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#666",
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  padding: "0.1rem 0.3rem",
+                  marginLeft: "0.5rem"
+                }}
+                title="Clear database filter"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div style={{
+            position: "relative",
+            display: "flex",
+            alignItems: "center"
+          }}>
+            {!searchExpanded ? (
+              <button
+                onClick={() => setSearchExpanded(true)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: "pointer",
+                  fontSize: "1.8rem",
+                  color: "#213555",
+                  transition: "all 0.3s ease",
+                  padding: "0.5rem",
+                  outline: "none"
+                }}
+                onMouseOver={(e) => {
+                  e.target.style.transform = "scale(1.1)";
+                  e.target.style.color = "#3E5879";
+                }}
+                onMouseOut={(e) => {
+                  e.target.style.transform = "scale(1)";
+                  e.target.style.color = "#213555";
+                }}
+              >
+                ⌕
+              </button>
+            ) : (
+              <div 
+                onMouseLeave={() => {
+                  if (!searchQuery.trim() && !dateFilter && !databaseFilter) {
+                    setSearchExpanded(false);
+                  }
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  background: "rgba(255, 255, 255, 0.95)",
+                  borderRadius: "20px",
+                  padding: "0.5rem 1rem",
+                  border: "2px solid #D8C4B6",
+                  boxShadow: "0 4px 15px rgba(0, 0, 0, 0.1)",
+                  backdropFilter: "blur(10px)",
+                  animation: "expandSearch 0.3s ease-out"
+                }}>
+                <input
+                  type="text"
+                  placeholder="Search queries and SQL..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  style={{
+                    border: "none",
+                    outline: "none",
+                    background: "transparent",
+                    fontSize: "0.9rem",
+                    color: "#213555",
+                    width: "200px",
+                    padding: "0.5rem"
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setDateFilter("");
+                    setDatabaseFilter("");
+                    setSearchExpanded(false);
+                  }}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#666",
+                    cursor: "pointer",
+                    fontSize: "1.2rem",
+                    padding: "0.25rem",
+                    marginLeft: "0.5rem"
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
 
@@ -248,9 +525,26 @@ export default function HistoryPage() {
               Start Querying →
             </button>
           </div>
+        ) : filteredHistory.length === 0 && searchQuery ? (
+          <div style={{
+            background: "rgba(255, 255, 255, 0.95)",
+            borderRadius: "16px",
+            padding: "2rem",
+            textAlign: "center",
+            boxShadow: "0 8px 25px rgba(0, 0, 0, 0.1)",
+            backdropFilter: "blur(10px)",
+            border: "1px solid rgba(255, 255, 255, 0.2)"
+          }}>
+            <p style={{ 
+              color: "#666", 
+              fontSize: "1.1rem", 
+              margin: 0,
+              lineHeight: "1.6"
+            }}>There are no results found for "{searchQuery}"</p>
+          </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-            {history.map((item, index) => (
+            {filteredHistory.map((item, index) => (
               <div key={item._id || index} style={{
                 background: "rgba(255, 255, 255, 0.95)",
                 padding: "1.5rem",
@@ -260,7 +554,8 @@ export default function HistoryPage() {
                 backdropFilter: "blur(10px)",
                 transition: "all 0.3s ease",
                 position: "relative",
-                overflow: "hidden"
+                overflow: "hidden",
+                cursor: "pointer"
               }}
               onMouseOver={(e) => {
                 e.currentTarget.style.transform = "translateY(-5px)";
@@ -269,6 +564,30 @@ export default function HistoryPage() {
               onMouseOut={(e) => {
                 e.currentTarget.style.transform = "translateY(0)";
                 e.currentTarget.style.boxShadow = "0 10px 30px rgba(0, 0, 0, 0.1)";
+              }}
+              onClick={() => {
+                // Create database object similar to what DatabasesPage would provide
+                const dbName = item.dbFilename || item.databaseName || "Unknown";
+                const selectedDb = {
+                  originalName: dbName.replace(/^\d+_/, ''),
+                  storedFilename: dbName,
+                  filename: dbName,
+                  name: dbName.replace(/^\d+_/, ''),
+                  _id: item.dbId || item._id
+                };
+                
+                // Navigate to query page with pre-filled data
+                // Load both prompt and SQL so user can run again
+                const naturalLanguageQuery = item.prompt || item.naturalLanguageQuery || item.query || "";
+                const sqlQuery = item.sql || item.generatedSQL || item.finalSQL || "";
+                navigate("/query", {
+                  state: {
+                    selectedDb: selectedDb,
+                    preFilledQuery: naturalLanguageQuery,
+                    preFilledSQL: sqlQuery, // Pre-fill both prompt and SQL
+                    fromHistory: true
+                  }
+                });
               }}
               >
                 {/* Card Header */}

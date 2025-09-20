@@ -20,14 +20,14 @@ export async function generateSQLFetch(prompt, dbFilename, token) {
 }
 
 // Execute SQL query
-export async function executeSQLFetch(sql, dbFilename, token) {
+export async function executeSQLFetch(sql, dbFilename, token, prompt = "") {
   const res = await fetch(`${API_BASE}/execute`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ sql, dbFilename }),
+    body: JSON.stringify({ sql, dbFilename, prompt }),
   });
 
   if (!res.ok) {
