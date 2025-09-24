@@ -189,7 +189,8 @@ export default function AuthPage() {
       <div className="auth-layout">
         <section className="intro-panel">
           <div className="brand">
-            <span className="brand-badge">Natural Query Explorer</span>
+            <img src="/talk2datalogo.svg" alt="Talk2Data Logo" className="brand-logo" />
+            <span className="brand-badge">Talk2Data</span>
           </div>
           <h2 className="intro-title">Query databases using plain English</h2>
           <p className="intro-subtitle">

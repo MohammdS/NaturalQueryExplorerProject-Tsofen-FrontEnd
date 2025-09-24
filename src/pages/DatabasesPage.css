@@ -70,7 +70,7 @@
 /* Page container */
 .db-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+  background-color: #F5EFE7;
   color: #1f2a44;
   display: flex;
   flex-direction: column;
