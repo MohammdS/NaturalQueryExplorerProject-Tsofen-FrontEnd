@@ -1,11 +1,13 @@
 // src/fetchers/apiFetch.js
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
 
 async function handle(res) {
   let data = null;
   try {
     data = await res.json();
-  } catch (_) {}
+  } catch {
+    data = null;
+  }
   if (!res.ok) {
     const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
     throw new Error(msg);

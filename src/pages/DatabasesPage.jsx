@@ -137,7 +137,7 @@ export default function DatabasesPage() {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       setUserName("Guest");
-    } catch (e) {
+    } catch {
       // ignore storage errors
     }
     setMenuOpen(false);

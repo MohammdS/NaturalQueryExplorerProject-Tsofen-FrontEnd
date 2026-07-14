@@ -1,4 +1,6 @@
-const API_BASE = "http://localhost:3000/api/dbs";
+import { BASE_URL } from "./apiFetch";
+
+const API_BASE = `${BASE_URL}/api/dbs`;
 
 // Get all user databases
 export async function getDbsFetch(token) {
@@ -86,4 +88,3 @@ export async function downloadDbFetch(id, token) {
   if (!res.ok) throw new Error("Failed to download database");
   return res.blob();
 }
-  
