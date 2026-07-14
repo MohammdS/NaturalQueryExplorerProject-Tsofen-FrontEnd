@@ -1,6 +1,4 @@
-import { BASE_URL } from "./apiFetch";
-
-const API_BASE = `${BASE_URL}/api/query`;
+const API_BASE = "http://localhost:3000/api/query";
 
 // Generate SQL from natural language prompt
 export async function generateSQLFetch(prompt, dbFilename, token) {
