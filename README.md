@@ -79,4 +79,4 @@ Open `http://localhost:5173` in your browser.
 
 ## Team
 
-Built by Malak Awawde, Loay Asaad, Muhammad Matar, and Mohammad Selawe. Mohammad served as team lead.
+Built by Malak Awawde, Loay Asaad, Muhammad Matar, and Mohammad Selawe.
