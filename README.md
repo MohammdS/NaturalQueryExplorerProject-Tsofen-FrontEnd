@@ -1,5 +1,7 @@
 # Human Language for DB Query
 
+**Related repository:** [Talk2Data Backend](https://github.com/MohammdS/NaturalQueryExplorerProject-Tsofen-BackEnd)
+
 This project demonstrates a Node.js backend architecture for modifying databases using human language commands. The structure follows best practices for maintainability and scalability.
 
 ## Project Structure
